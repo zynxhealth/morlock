@@ -14,13 +14,14 @@ class App {
     private def showFrameWindow() {
         def swing = new SwingBuilder()
         swing.edt {
-            frame(title: "Morlock - ${fileModel.fileName}", defaultCloseOperation:JFrame.EXIT_ON_CLOSE, pack:true, show: true) {
+            frame(title: "Morlock - ${fileModel.fileName}", defaultCloseOperation: JFrame.EXIT_ON_CLOSE, pack: true, show: true) {
                 borderLayout()
                 panel(constraints: BorderLayout.NORTH) {
                     vbox {
                         label(text: 'I am the button bar.')
-                    vstrut(height: 50)
-                    hstrut(width: 1000)
+                        vstrut(height: 50)
+                        hstrut(width: 1000)
+                        widget(new SplitSlider())
                     }
                 }
                 panel(new FileContentsPanel(model: fileModel), constraints: BorderLayout.CENTER)
