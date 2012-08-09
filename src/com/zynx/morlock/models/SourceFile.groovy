@@ -9,7 +9,7 @@ class SourceFile {
 
     def initialize() {
         if (! repoDir) {
-            repoDir = new File(fileName.replaceFirst(/\/[^\/]+$/, ''))
+            repoDir = new File(findRepoDir(fileName))
         }
         refreshCommitList()
     }
@@ -19,6 +19,23 @@ class SourceFile {
             def tokens = it.tokenize('#')
             commits << new Commit(abbreviatedHash: tokens[0], author: tokens[1], committer: tokens[2])
         }
-        println commits.size()
+    }
+
+    String contentsAt(String commitHash) {
+        Git.executeCommand(repoDir, "git show $commitHash:${this.pathUnderRepo}")
+    }
+
+    String getPathUnderRepo() {
+        return fileName.replaceFirst(repoDir.absolutePath + '/', '')
+    }
+
+    private static String findRepoDir(String fileName) {
+        while (! (new File(fileName + '/.git')).exists()) {
+            fileName = fileName.replaceFirst(/\/[^\/]+$/, '')
+            if (fileName.isEmpty()) {
+                return ''
+            }
+        }
+        fileName
     }
 }
