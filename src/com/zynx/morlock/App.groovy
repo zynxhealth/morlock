@@ -3,13 +3,14 @@ package com.zynx.morlock
 import groovy.swing.SwingBuilder
 import java.awt.BorderLayout
 import javax.swing.JFrame
+import com.zynx.morlock.models.SourceFile
 
 
 class App {
 
     static App theApp;
 
-    FileModel fileModel
+    SourceFile fileModel
 
     private def showFrameWindow() {
         def swing = new SwingBuilder()
@@ -33,12 +34,13 @@ class App {
     }
 
     def start() {
+        fileModel.initialize()
         showFrameWindow()
     }
 
     static void main(String[] args) {
         if (args.size() > 0) {
-            theApp = new App(fileModel: new FileModel(fileName: args[0]))
+            theApp = new App(fileModel: new SourceFile(fileName: args[0]))
             theApp.start()
         }
         else {
