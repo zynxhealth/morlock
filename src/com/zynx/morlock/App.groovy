@@ -18,7 +18,8 @@ class App {
             panel(constraints: BorderLayout.NORTH) {
                 vbox {
                     label(text: 'I am the button bar.')
-                    label(text: 'I am the version slider.')
+                    vstrut(height: 50)
+                    hstrut(width: 1000)
                 }
             }
             panel(constraints: BorderLayout.CENTER) {
