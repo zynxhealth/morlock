@@ -6,19 +6,38 @@ import javax.swing.JFrame
 
 
 class App {
-    static void main(String[] args) {
-        if (args.size() > 0) {
-            String fileName = args[0]
-            def swing = new SwingBuilder()
-            def frame = swing.frame(title: "Morlock - $fileName", defaultCloseOperation:JFrame.EXIT_ON_CLOSE, pack:true) {
-                borderLayout()
-                label(text: 'slider goes here', constraints: BorderLayout.NORTH)
-                panel(constraints: BorderLayout.CENTER) {
-                    label(text: 'file contents go here')
+
+    static App theApp;
+
+    String fileName
+
+    private def setupFrameWindow() {
+        def swing = new SwingBuilder()
+        swing.frame(title: "Morlock - $fileName", defaultCloseOperation:JFrame.EXIT_ON_CLOSE, pack:true) {
+            borderLayout()
+            panel(constraints: BorderLayout.NORTH) {
+                vbox {
+                    label(text: 'I am the button bar.')
+                    label(text: 'I am the version slider.')
                 }
             }
+            panel(constraints: BorderLayout.CENTER) {
+                label(text: 'I am the file contents panel')
+            }
+            panel(constraints: BorderLayout.SOUTH) {
+                label(text: 'I am the commit details panel')
+            }
+        }
+    }
 
-            frame.show()
+    def start() {
+        setupFrameWindow().show()
+    }
+
+    static void main(String[] args) {
+        if (args.size() > 0) {
+            theApp = new App(fileName: args[0])
+            theApp.start()
         }
         else {
             println "Usage:  morlock <filename>"
