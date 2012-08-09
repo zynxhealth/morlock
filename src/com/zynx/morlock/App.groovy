@@ -9,35 +9,35 @@ class App {
 
     static App theApp;
 
-    String fileName
+    FileModel fileModel
 
-    private def setupFrameWindow() {
+    private def showFrameWindow() {
         def swing = new SwingBuilder()
-        swing.frame(title: "Morlock - $fileName", defaultCloseOperation:JFrame.EXIT_ON_CLOSE, pack:true) {
-            borderLayout()
-            panel(constraints: BorderLayout.NORTH) {
-                vbox {
-                    label(text: 'I am the button bar.')
+        swing.edt {
+            frame(title: "Morlock - ${fileModel.fileName}", defaultCloseOperation:JFrame.EXIT_ON_CLOSE, pack:true, show: true) {
+                borderLayout()
+                panel(constraints: BorderLayout.NORTH) {
+                    vbox {
+                        label(text: 'I am the button bar.')
                     vstrut(height: 50)
                     hstrut(width: 1000)
+                    }
                 }
-            }
-            panel(constraints: BorderLayout.CENTER) {
-                label(text: 'I am the file contents panel')
-            }
-            panel(constraints: BorderLayout.SOUTH) {
-                label(text: 'I am the commit details panel')
+                panel(new FileContentsPanel(model: fileModel), constraints: BorderLayout.CENTER)
+                panel(constraints: BorderLayout.SOUTH) {
+                    label(text: 'I am the commit details panel')
+                }
             }
         }
     }
 
     def start() {
-        setupFrameWindow().show()
+        showFrameWindow()
     }
 
     static void main(String[] args) {
         if (args.size() > 0) {
-            theApp = new App(fileName: args[0])
+            theApp = new App(fileModel: new FileModel(fileName: args[0]))
             theApp.start()
         }
         else {
