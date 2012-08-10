@@ -24,9 +24,10 @@ class App {
                 panel(constraints: BorderLayout.NORTH) {
                     vbox {
                         toolBar(floatable: false) {
-                            checkBox('hash', id: 'hashButton', selected: true, actionPerformed: {fileContentsView.showHashColumn(it.source.selected)})
-                            checkBox('committer', id: 'committerButton', selected: true, actionPerformed: {fileContentsView.showCommitterColumn(it.source.selected)})
-                            checkBox('author', id: 'authorButton', selected: true, actionPerformed: {fileContentsView.showAuthorColumn(it.source.selected)})
+                            FileContentsView.columnNames().each {
+                                String name = it
+                                swing.checkBox(it, id: "${name}Button", selected: true, actionPerformed: {fileContentsView.showColumn(name, it.source.selected)})
+                            }
                         }
                         vstrut(height: 50)
                         hstrut(width: 1000)
