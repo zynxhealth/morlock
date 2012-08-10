@@ -11,10 +11,6 @@ import java.awt.Point
 class DiscreteSplitSlider extends JComponent {
     def num_values
 
-    def final SLIDER_HEIGHT = 6
-    def final SLIDER_START = 10
-    def final SLIDER_END = 990
-
     int leftSliderX, rightSliderX
     def is_locked, isSelectedLeft, isSelectedRight
 
@@ -39,14 +35,14 @@ class DiscreteSplitSlider extends JComponent {
     }
 
     def findNearestTick(int x_val) {
-        int interval = (SLIDER_END - SLIDER_START) / (num_values - 1)
+        int interval = (ui.SLIDER_BAR_END - ui.SLIDER_BAR_START) / (num_values - 1)
 
-        x_val = x_val - SLIDER_START
+        x_val = x_val - ui.SLIDER_BAR_START
 
         if (x_val % interval < interval / 2)
-            x_val - (x_val % interval) + SLIDER_START
+            x_val - (x_val % interval) + ui.SLIDER_BAR_START
         else
-            x_val + (interval - x_val % interval) + SLIDER_START
+            x_val + (interval - x_val % interval) + ui.SLIDER_BAR_START
     }
 
     def DiscreteSplitSlider(values) {
@@ -56,8 +52,8 @@ class DiscreteSplitSlider extends JComponent {
         isSelectedLeft = false
         isSelectedRight = false
 
-        leftSliderX = SLIDER_START
-        rightSliderX = SLIDER_START
+        leftSliderX = ui.SLIDER_BAR_START
+        rightSliderX = ui.SLIDER_BAR_START
 
         if (values < 0)
             num_values = 0
@@ -122,7 +118,7 @@ class DiscreteSplitSlider extends JComponent {
     }
 
     private void moveLeftSlider(Point location) {
-        if (location.x > SLIDER_START && location.x < SLIDER_END) {
+        if (location.x > ui.SLIDER_BAR_START && location.x < ui.SLIDER_BAR_END) {
             def newLoc = findNearestTick((int) location.x)
             if (newLoc <= rightSliderX)
                 leftSliderX = newLoc
@@ -132,7 +128,7 @@ class DiscreteSplitSlider extends JComponent {
     }
 
     private void moveRightSlider(Point location) {
-        if (location.x > SLIDER_START && location.x < SLIDER_END) {
+        if (location.x > ui.SLIDER_BAR_START && location.x < ui.SLIDER_BAR_END) {
             def newLoc = findNearestTick((int) location.x)
             if (newLoc >= leftSliderX)
                 rightSliderX = newLoc
@@ -142,7 +138,7 @@ class DiscreteSplitSlider extends JComponent {
     }
 
     private void moveJointSlider(Point location) {
-        if (location.x > SLIDER_START && location.x < SLIDER_END) {
+        if (location.x > ui.SLIDER_BAR_START && location.x < ui.SLIDER_BAR_END) {
             rightSliderX = leftSliderX = findNearestTick((int) location.x)
             repaint()
         }
