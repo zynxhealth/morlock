@@ -6,7 +6,6 @@ import java.awt.Graphics
 import java.awt.event.MouseListener
 import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionListener
-import java.awt.Color
 import java.awt.Point
 
 class DiscreteSplitSlider extends JComponent {
@@ -19,7 +18,9 @@ class DiscreteSplitSlider extends JComponent {
     int leftSliderX, rightSliderX
     def is_locked, isSelectedLeft, isSelectedRight
 
-    def getSliderValue(){
+    DiscreteSplitSliderUI ui
+
+    def getSliderValue() {
         if (is_locked)
             ['value': leftSliderX]
         else
@@ -37,12 +38,6 @@ class DiscreteSplitSlider extends JComponent {
         is_locked = !is_locked
     }
 
-    def getRelevantLocation(Point locOnScreen) {
-        def componentLocation = this.getLocationOnScreen()
-
-        new Point((int) locOnScreen.x - componentLocation.x, (int) locOnScreen.y - componentLocation.y)
-    }
-
     def findNearestTick(int x_val) {
         int interval = (SLIDER_END - SLIDER_START) / (num_values - 1)
 
@@ -55,6 +50,8 @@ class DiscreteSplitSlider extends JComponent {
     }
 
     def DiscreteSplitSlider(values) {
+        ui = new DiscreteSplitSliderUI(this)
+
         is_locked = false
         isSelectedLeft = false
         isSelectedRight = false
@@ -67,87 +64,61 @@ class DiscreteSplitSlider extends JComponent {
         else
             num_values = values
 
-        addMouseListener(new MouseListener() {
-            @Override
-            void mousePressed(MouseEvent e) {
-                def location = getRelevantLocation(e.getLocationOnScreen())
-
-                if (is_locked) {
-                    moveJointSlider(location)
-                } else {
-                    if (isClickedLeftSlider(location)) {
-                        isSelectedLeft = true
-                    } else if (isClickedRightSlider(location)) {
-                        isSelectedRight = true
-                    }
-                }
-            }
-
-            @Override
-            void mouseClicked(MouseEvent e) {}
-
-            @Override
-            void mouseReleased(MouseEvent e) {
-                isSelectedLeft = false
-                isSelectedRight = false
-            }
-
-            @Override
-            void mouseEntered(MouseEvent e) {}
-
-            @Override
-            void mouseExited(MouseEvent e) {}
-
-
-        })
-        addMouseMotionListener(new MouseMotionListener() {
-
-            @Override
-            void mouseDragged(MouseEvent e) {
-                def location = getRelevantLocation(e.getLocationOnScreen())
-
-                if (is_locked) {
-                    moveJointSlider(location)
-                } else {
-                    if (isSelectedLeft) {
-                        moveLeftSlider(location)
-                    } else if (isSelectedRight) {
-                        moveRightSlider(location)
-                    }
-                }
-            }
-
-            @Override
-            void mouseMoved(MouseEvent e) {}
-        });
+        addMouseListener(clickListener)
+        addMouseMotionListener(motionListener);
     }
 
-    private boolean isClickedLeftSlider(Point location) {
-        def xdiff, ydiff
-        xdiff = leftSliderX - location.x
-        ydiff = 0 - location.y
+    MouseListener clickListener = new MouseListener() {
+        @Override
+        void mousePressed(MouseEvent e) {
+            def location = ui.getRelevantLocation(e.getLocationOnScreen())
 
-        if (xdiff < 0 || xdiff > 10)
-            return false
+            if (is_locked) {
+                moveJointSlider(location)
+            } else {
+                if (ui.isClickedLeftSlider(location)) {
+                    isSelectedLeft = true
+                } else if (ui.isClickedRightSlider(location)) {
+                    isSelectedRight = true
+                }
+            }
+        }
 
-        if (ydiff < -20 || ydiff > 0)
-            return false
+        @Override
+        void mouseClicked(MouseEvent e) {}
 
-        return true
+        @Override
+        void mouseReleased(MouseEvent e) {
+            isSelectedLeft = false
+            isSelectedRight = false
+        }
+
+        @Override
+        void mouseEntered(MouseEvent e) {}
+
+        @Override
+        void mouseExited(MouseEvent e) {}
     }
 
-    private boolean isClickedRightSlider(Point location) {
-        def xdiff, ydiff
-        xdiff = rightSliderX - location.x
-        ydiff = 0 - location.y
+    MouseMotionListener motionListener = new MouseMotionListener() {
 
-        if (xdiff > 0 || xdiff < -10)
-            return false
+        @Override
+        void mouseDragged(MouseEvent e) {
+            def location = ui.getRelevantLocation(e.getLocationOnScreen())
 
-        if (ydiff < -20 || ydiff > 0)
-            return false
+            if (is_locked) {
+                moveJointSlider(location)
+            } else {
+                if (isSelectedLeft) {
+                    moveLeftSlider(location)
+                } else if (isSelectedRight) {
+                    moveRightSlider(location)
+                }
+            }
+        }
 
-        return true
+        @Override
+        void mouseMoved(MouseEvent e) {}
     }
 
     private void moveLeftSlider(Point location) {
@@ -179,56 +150,21 @@ class DiscreteSplitSlider extends JComponent {
 
     @Override
     void paint(Graphics g) {
-        drawSliderBar(g)
-        drawTicks(g)
-        drawSlider(g)
-    }
-
-    private void drawSlider(Graphics g) {
-        g.setColor(Color.gray)
-
-        int[] left_x_point_array = [leftSliderX - 1, leftSliderX - 10, leftSliderX - 1]
-        int[] left_y_point_array = [0, 10, 20]
-
-        int[] right_x_point_array = [rightSliderX + 1, rightSliderX + 10, rightSliderX + 1]
-        int[] right_y_point_array = [0, 10, 20]
-
-        g.fillPolygon(left_x_point_array, left_y_point_array, 3)
-        g.fillPolygon(right_x_point_array, right_y_point_array, 3)
-    }
-
-    private void drawTicks(Graphics g) {
-        def tick_width = 2
-        def tick_height = 12
-        def arc_amount = 3
-
-        int tick_increments = (SLIDER_END - SLIDER_START) / (num_values - 1)
-
-        if (num_values > 0) {
-            for (i in 0..(num_values - 2)) {
-                g.fillRoundRect(SLIDER_START + i * tick_increments, 0, tick_width, tick_height, arc_amount, arc_amount)
-            }
-
-            g.fillRoundRect(SLIDER_END - tick_width, 0, tick_width, tick_height, arc_amount, arc_amount)
-        }
-    }
-
-    private void drawSliderBar(Graphics g) {
-        g.fillRoundRect(SLIDER_START, 0, SLIDER_END - SLIDER_START, SLIDER_HEIGHT, (int) SLIDER_HEIGHT / 2, (int) SLIDER_HEIGHT / 2);
+        ui.drawComponent(g)
     }
 
     @Override
     Dimension getMaximumSize() {
-        new Dimension(1000, 50)
+        ui.getComponentDimension()
     }
 
     @Override
     Dimension getMinimumSize() {
-        new Dimension(1000, 50)
+        ui.getComponentDimension()
     }
 
     @Override
     Dimension getPreferredSize() {
-        new Dimension(1000, 50)
+        ui.getComponentDimension()
     }
 }
