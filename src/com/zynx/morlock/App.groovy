@@ -5,7 +5,7 @@ import groovy.swing.SwingBuilder
 import java.awt.BorderLayout
 import javax.swing.JFrame
 import javax.swing.JScrollPane
-import javax.swing.table.DefaultTableModel
+
 
 class App {
 
@@ -29,10 +29,7 @@ class App {
                         widget(new DiscreteSplitSlider(5))
                     }
                 }
-                    widget(fileContentsPane, constraints: BorderLayout.CENTER)
-//                scrollPane(verticalScrollBarPolicy: JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, constraints: BorderLayout.CENTER) {
-//                    panel(new FileContentsPanel(model: fileModel))
-//                }
+                widget(fileContentsPane, constraints: BorderLayout.CENTER)
                 panel(constraints: BorderLayout.SOUTH) {
                     label(text: 'I am the commit details panel')
                 }
