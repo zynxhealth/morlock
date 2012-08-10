@@ -7,6 +7,7 @@ import java.awt.Component
 import javax.swing.table.TableColumnModel
 import javax.swing.table.TableColumn
 import javax.swing.SwingConstants
+import com.zynx.morlock.models.FileHistoryRegion
 
 
 class FileContentsView extends JTable implements Observer {
@@ -47,12 +48,12 @@ class FileContentsView extends JTable implements Observer {
     @Override
     void update(Observable o, Object arg) {
         println "Update on object $o with arg $arg"
-        fileContents = model.contentsAt('HEAD^')
         tableModel.setRowCount(0)
-        fileContents.eachLine {
-            tableModel.addRow(['intro', 'exit', 'committer', 'author', it] as Object[])
+        model.history.each { FileHistoryRegion region ->
+            def contents = "<html>${region.contents.replaceAll(/\n/, '<br>')}</html>"
+            contents = contents.replaceFirst(/\<br\>\<\/html\>/, '<br><br></html>')
+            tableModel.addRow([region.introHash, region.deleteHash, region.committer, region.author, contents] as Object[])
         }
-//        tableModel.addRow(['intro', 'exit', 'committer', 'author', "<html>${fileContents.replaceAll(/\n/, '<br>')}</html>"] as Object[])
         updateRowHeights()
         updateColumnWidths()
     }
@@ -63,7 +64,7 @@ class FileContentsView extends JTable implements Observer {
 
             for (column in 0..(this.columnCount - 1)) {
                 def cellRenderer = this.getCellRenderer(row, column)
-                cellRenderer.setVerticalTextPosition(SwingConstants.TOP)
+                cellRenderer.setVerticalAlignment(SwingConstants.TOP)
                 Component comp = this.prepareRenderer(cellRenderer, row, column)
                 calculatedHeight = Math.max(calculatedHeight, comp.getPreferredSize().height)
             }

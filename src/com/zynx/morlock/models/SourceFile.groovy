@@ -5,7 +5,8 @@ class SourceFile extends Observable {
     private String fileName
     private File repoDir
 
-    private List commits = []
+    List commits = []
+    List history = []
 
     def setFileName(String fileName) {
         this.fileName = fileName
@@ -13,7 +14,30 @@ class SourceFile extends Observable {
             repoDir = new File(findRepoDir(fileName))
         }
         refreshCommitList()
+        refreshHistory()
         notifyObservers()
+    }
+
+    private refreshHistory() {
+        //  FAKE!
+        String contents = contentsAt('HEAD^')
+        Random rand = new Random((new Date()).seconds)
+        FileHistoryRegion current
+        contents.eachLine {
+            if (! current) {
+                current = new FileHistoryRegion(contents: it, introHash: 'intro', deleteHash: rand.nextInt() % 4 == 0 ? 'delete' : null, committer: 'committer', author: 'author')
+            }
+            else {
+                current.contents += "\n$it"
+                if (rand.nextInt() % 6 == 0) {
+                    history << current
+                    current = null
+                }
+            }
+        }
+        if (current) {
+            history << current
+        }
     }
 
     def refreshCommitList() {
