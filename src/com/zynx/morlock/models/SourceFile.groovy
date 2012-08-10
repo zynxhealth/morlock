@@ -1,17 +1,19 @@
 package com.zynx.morlock.models
 
 
-class SourceFile {
-    String fileName
-    File repoDir
+class SourceFile extends Observable {
+    private String fileName
+    private File repoDir
 
-    List commits = []
+    private List commits = []
 
-    def initialize() {
+    def setFileName(String fileName) {
+        this.fileName = fileName
         if (! repoDir) {
             repoDir = new File(findRepoDir(fileName))
         }
         refreshCommitList()
+        notifyObservers()
     }
 
     def refreshCommitList() {

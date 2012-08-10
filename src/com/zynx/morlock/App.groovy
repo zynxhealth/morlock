@@ -4,6 +4,7 @@ import groovy.swing.SwingBuilder
 import java.awt.BorderLayout
 import javax.swing.JFrame
 import com.zynx.morlock.models.SourceFile
+import javax.swing.JScrollPane
 
 
 class App {
@@ -25,7 +26,9 @@ class App {
                         widget(new DiscreteSplitSlider(5))
                     }
                 }
-                panel(new FileContentsPanel(model: fileModel), constraints: BorderLayout.CENTER)
+                scrollPane(verticalScrollBarPolicy: JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, constraints: BorderLayout.CENTER) {
+                    panel(new FileContentsPanel(model: fileModel))
+                }
                 panel(constraints: BorderLayout.SOUTH) {
                     label(text: 'I am the commit details panel')
                 }
@@ -34,13 +37,14 @@ class App {
     }
 
     def start() {
-        fileModel.initialize()
         showFrameWindow()
     }
 
     static void main(String[] args) {
         if (args.size() > 0) {
-            theApp = new App(fileModel: new SourceFile(fileName: args[0]))
+            SourceFile model = new SourceFile()
+            model.setFileName(args[0])
+            theApp = new App(fileModel: model)
             theApp.start()
         }
         else {
