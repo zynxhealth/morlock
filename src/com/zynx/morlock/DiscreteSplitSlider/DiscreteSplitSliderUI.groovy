@@ -1,4 +1,4 @@
-package com.zynx.morlock
+package com.zynx.morlock.DiscreteSplitSlider
 
 import java.awt.Graphics
 import java.awt.Color
@@ -11,13 +11,16 @@ import java.awt.RenderingHints
 class DiscreteSplitSliderUI {
     DiscreteSplitSlider slider
 
+    def final COMPONENT_WIDTH = 1030
+    def final COMPONENT_HEIGHT = 50
+
     def final SLIDER_BAR_Y = 10
 
     def final SLIDER_BAR_HEIGHT = 10
-    def final SLIDER_BAR_START = 10
-    def final SLIDER_BAR_END = 990
+    def final SLIDER_BAR_START = 25
+    def final SLIDER_BAR_END = 1005
 
-    def final SLIDER_WIDTH = 10
+    def final SLIDER_WIDTH = 20
     def final SLIDER_HEIGHT = 20
 
     def DiscreteSplitSliderUI(caller) {
@@ -28,10 +31,11 @@ class DiscreteSplitSliderUI {
         Graphics2D g2d = (Graphics2D)g
 
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
+                RenderingHints.VALUE_ANTIALIAS_ON)
 
         drawSliderBar(g2d)
         drawTicks(g2d)
+
         drawSlider(g2d)
         drawSelectionBar(g2d)
     }
@@ -67,18 +71,26 @@ class DiscreteSplitSliderUI {
     private void drawTicks(Graphics2D g) {
         g.setColor(Color.darkGray)
 
+        final label_x_offset = 20
+
         def tick_width = 2
         def tick_height = SLIDER_BAR_HEIGHT
         def arc_amount = 3
 
         int tick_increments = (SLIDER_BAR_END - SLIDER_BAR_START) / (slider.num_values - 1)
         final tick_y = SLIDER_BAR_Y - (int)(SLIDER_BAR_HEIGHT / 2)
+        final label_y = SLIDER_BAR_Y + 30
 
         if (slider.num_values > 0) {
+            g.drawString(slider.value_list[0], SLIDER_BAR_START - label_x_offset, label_y)
+            g.drawString(slider.value_list.last(), SLIDER_BAR_END - label_x_offset,label_y)
+
             for (i in 1..(slider.num_values - 2)) {
                 final tick_x = SLIDER_BAR_START + i * tick_increments - (int) (tick_width / 2)
 
                 g.fillRoundRect(tick_x, tick_y, tick_width, tick_height, arc_amount, arc_amount)
+
+                g.drawString(slider.value_list[i], tick_x - label_x_offset, label_y)
             }
         }
     }
@@ -125,9 +137,8 @@ class DiscreteSplitSliderUI {
     }
 
     Dimension getComponentDimension() {
-        def component_width = 1000
-        def component_height = 50
 
-        new Dimension(component_width, component_height)
+
+        new Dimension(COMPONENT_WIDTH, COMPONENT_HEIGHT)
     }
 }

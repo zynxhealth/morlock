@@ -5,6 +5,7 @@ import groovy.swing.SwingBuilder
 import java.awt.BorderLayout
 import javax.swing.JFrame
 import javax.swing.JScrollPane
+import com.zynx.morlock.DiscreteSplitSlider.DiscreteSplitSlider
 
 
 class App {
@@ -31,7 +32,7 @@ class App {
                         }
                         vstrut(height: 50)
                         hstrut(width: 1000)
-                        widget(new DiscreteSplitSlider(5))
+                        widget(new DiscreteSplitSlider(['12345', '23456', '34567', '45678', '56789']))
                     }
                 }
                 widget(fileContentsPane, constraints: BorderLayout.CENTER)

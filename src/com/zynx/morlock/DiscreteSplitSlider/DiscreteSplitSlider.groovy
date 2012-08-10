@@ -1,4 +1,4 @@
-package com.zynx.morlock
+package com.zynx.morlock.DiscreteSplitSlider
 
 import java.awt.Dimension
 import javax.swing.JComponent
@@ -10,40 +10,14 @@ import java.awt.Point
 
 class DiscreteSplitSlider extends JComponent {
     def num_values
+    List<String> value_list
 
     int leftSliderX, rightSliderX
-    def is_locked, isSelectedLeft, isSelectedRight
+    def is_locked = false, isSelectedLeft, isSelectedRight
 
     DiscreteSplitSliderUI ui
 
-    def getSliderValue() {
-        if (is_locked)
-            ['value': leftSliderX]
-        else
-            ['leftBound': leftSliderX, 'rightBound': rightSliderX]
-    }
-
-    def toggleSplitSliderMode() {
-        if (!is_locked) {
-            isSelectedLeft = false
-            isSelectedRight = false
-
-            leftSliderX = rightSliderX
-        }
-
-        is_locked = !is_locked
-    }
-
-    def findNearestTick(int x_val) {
-        int interval = (ui.SLIDER_BAR_END - ui.SLIDER_BAR_START) / (num_values - 1)
-
-        x_val = x_val - ui.SLIDER_BAR_START
-
-        if (x_val % interval < interval / 2)
-            x_val - (x_val % interval) + ui.SLIDER_BAR_START
-        else
-            x_val + (interval - x_val % interval) + ui.SLIDER_BAR_START
-    }
+    List<DiscreteSplitSliderListener> listeners = []
 
     def DiscreteSplitSlider(values) {
         ui = new DiscreteSplitSliderUI(this)
@@ -55,10 +29,12 @@ class DiscreteSplitSlider extends JComponent {
         leftSliderX = ui.SLIDER_BAR_START
         rightSliderX = ui.SLIDER_BAR_START
 
-        if (values < 0)
+        value_list = values
+
+        if (value_list.size() < 0)
             num_values = 0
         else
-            num_values = values
+            num_values = value_list.size()
 
         addMouseListener(clickListener)
         addMouseMotionListener(motionListener);
@@ -117,6 +93,35 @@ class DiscreteSplitSlider extends JComponent {
         void mouseMoved(MouseEvent e) {}
     }
 
+    def getSliderValue() {
+        if (is_locked)
+            ['value': leftSliderX]
+        else
+            ['leftBound': leftSliderX, 'rightBound': rightSliderX]
+    }
+
+    def toggleSplitSliderMode() {
+        if (!is_locked) {
+            isSelectedLeft = false
+            isSelectedRight = false
+
+            leftSliderX = rightSliderX
+        }
+
+        is_locked = !is_locked
+    }
+
+    def findNearestTick(int x_val) {
+        int interval = (ui.SLIDER_BAR_END - ui.SLIDER_BAR_START) / (num_values - 1)
+
+        x_val = x_val - ui.SLIDER_BAR_START
+
+        if (x_val % interval < interval / 2)
+            x_val - (x_val % interval) + ui.SLIDER_BAR_START
+        else
+            x_val + (interval - x_val % interval) + ui.SLIDER_BAR_START
+    }
+
     private void moveLeftSlider(Point location) {
         if (location.x > ui.SLIDER_BAR_START && location.x < ui.SLIDER_BAR_END) {
             def newLoc = findNearestTick((int) location.x)
@@ -141,6 +146,48 @@ class DiscreteSplitSlider extends JComponent {
         if (location.x > ui.SLIDER_BAR_START && location.x < ui.SLIDER_BAR_END) {
             rightSliderX = leftSliderX = findNearestTick((int) location.x)
             repaint()
+        }
+    }
+
+    private def getValueIndexAt(int slider_x)
+    {
+        int interval = ui.SLIDER_BAR_END - ui.SLIDER_BAR_START / num_values
+        (slider_x - ui.SLIDER_BAR_START) / interval
+    }
+
+    def List<String> getSelectedValues() {
+        def beginIndex = getValueIndexAt(leftSliderX)
+        def endIndex = getValueIndexAt(rightSliderX)
+
+        List<String> selected_values = []
+        for (i in beginIndex..endIndex) {
+            selected_values.add(value_list[i])
+        }
+        selected_values
+    }
+
+    def addListener(DiscreteSplitSliderListener listener) {
+        listeners.add(listener)
+    }
+
+    void sliderValueChanged() {
+        for (listener in listeners)
+        {
+            listener.sliderValueChanged(new SliderEvent(this, !is_locked, getSelectedValues()))
+        }
+    }
+
+    void sliderJoined() {
+        for (listener in listeners)
+        {
+            listener.sliderJoined(new SliderEvent(this, !is_locked, getSelectedValues()))
+        }
+    }
+
+    void sliderSplit() {
+        for (listener in listeners)
+        {
+            listener.sliderSplit(new SliderEvent(this, !is_locked, getSelectedValues()))
         }
     }
 
