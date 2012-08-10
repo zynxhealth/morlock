@@ -23,7 +23,12 @@ class App {
                 borderLayout()
                 panel(constraints: BorderLayout.NORTH) {
                     vbox {
-                        label(text: 'I am the button bar.')
+                        toolBar(floatable: false) {
+                            FileContentsView.columnNames().each {
+                                String name = it
+                                swing.checkBox(it, id: "${name}Button", selected: true, actionPerformed: {fileContentsView.showColumn(name, it.source.selected)})
+                            }
+                        }
                         vstrut(height: 50)
                         hstrut(width: 1000)
                         widget(new DiscreteSplitSlider(5))
