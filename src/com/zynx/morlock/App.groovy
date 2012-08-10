@@ -21,7 +21,7 @@ class App {
                         label(text: 'I am the button bar.')
                         vstrut(height: 50)
                         hstrut(width: 1000)
-                        widget(new SplitSlider())
+                        widget(new DiscreteSplitSlider(5))
                     }
                 }
                 panel(new FileContentsPanel(model: fileModel), constraints: BorderLayout.CENTER)
