@@ -33,22 +33,29 @@ class DiscreteSplitSliderUI {
         drawSliderBar(g2d)
         drawTicks(g2d)
         drawSlider(g2d)
+        drawSelectionBar(g2d)
+    }
 
+    private void drawSelectionBar(Graphics2D g2d) {
         g2d.setColor(Color.lightGray)
-        g2d.fillRect(slider.leftSliderX - 1, SLIDER_BAR_Y, slider.rightSliderX - slider.leftSliderX + 2, SLIDER_BAR_HEIGHT)
+
+        final selection_bar_x = slider.leftSliderX - 1
+        final selection_bar_width = slider.rightSliderX - slider.leftSliderX + 2
+
+        g2d.fillRect(selection_bar_x, SLIDER_BAR_Y, selection_bar_width, SLIDER_BAR_HEIGHT)
     }
 
     private void drawSlider(Graphics2D g) {
-        g.setColor(Color.gray)
+        g.setColor(Color.black)
 
-        final slider_y = SLIDER_BAR_Y - (int)(SLIDER_BAR_HEIGHT / 2)
+        final slider_y = SLIDER_BAR_Y - (int)(SLIDER_BAR_HEIGHT / 2) - 5
 
         int[] left_x_point_array = [slider.leftSliderX - 1, slider.leftSliderX - SLIDER_WIDTH, slider.leftSliderX - 1]
 
-        int[] left_y_point_array = [slider_y, slider_y + (SLIDER_HEIGHT / 2), slider_y + SLIDER_HEIGHT]
+        int[] left_y_point_array = [slider_y, slider_y + (SLIDER_HEIGHT / 2) + 5, slider_y + SLIDER_HEIGHT + 10]
 
         int[] right_x_point_array = [slider.rightSliderX + 1, slider.rightSliderX + SLIDER_WIDTH, slider.rightSliderX + 1]
-        int[] right_y_point_array = [slider_y, slider_y + (SLIDER_HEIGHT / 2), slider_y + SLIDER_HEIGHT]
+        int[] right_y_point_array = [slider_y, slider_y + (SLIDER_HEIGHT / 2) + 5, slider_y + SLIDER_HEIGHT + 10]
 
         def left_slider = new Polygon(left_x_point_array, left_y_point_array, left_x_point_array.length)
         def right_slider = new Polygon(right_x_point_array, right_y_point_array, right_x_point_array.length)
@@ -58,6 +65,8 @@ class DiscreteSplitSliderUI {
     }
 
     private void drawTicks(Graphics2D g) {
+        g.setColor(Color.darkGray)
+
         def tick_width = 2
         def tick_height = SLIDER_BAR_HEIGHT
         def arc_amount = 3
@@ -75,7 +84,10 @@ class DiscreteSplitSliderUI {
     }
 
     private void drawSliderBar(Graphics2D g) {
-        g.fillRoundRect(SLIDER_BAR_START, SLIDER_BAR_Y, SLIDER_BAR_END - SLIDER_BAR_START, SLIDER_BAR_HEIGHT, 10, 10);
+        g.setColor(Color.darkGray)
+
+        final slider_bar_curve = 10
+        g.fillRoundRect(SLIDER_BAR_START, SLIDER_BAR_Y, SLIDER_BAR_END - SLIDER_BAR_START, SLIDER_BAR_HEIGHT, slider_bar_curve, slider_bar_curve);
     }
 
     private boolean isClickedLeftSlider(Point location) {
