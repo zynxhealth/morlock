@@ -23,7 +23,11 @@ class App {
                 borderLayout()
                 panel(constraints: BorderLayout.NORTH) {
                     vbox {
-                        label(text: 'I am the button bar.')
+                        toolBar(floatable: false) {
+                            checkBox('hash', id: 'hashButton', selected: true, actionPerformed: {fileContentsView.showHashColumn(it.source.selected)})
+                            checkBox('committer', id: 'committerButton', selected: true, actionPerformed: {fileContentsView.showCommitterColumn(it.source.selected)})
+                            checkBox('author', id: 'authorButton', selected: true, actionPerformed: {fileContentsView.showAuthorColumn(it.source.selected)})
+                        }
                         vstrut(height: 50)
                         hstrut(width: 1000)
                         widget(new DiscreteSplitSlider(5))
