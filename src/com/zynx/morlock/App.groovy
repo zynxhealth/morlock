@@ -1,11 +1,11 @@
 package com.zynx.morlock
 
+import com.zynx.morlock.models.SourceFile
 import groovy.swing.SwingBuilder
 import java.awt.BorderLayout
 import javax.swing.JFrame
-import com.zynx.morlock.models.SourceFile
 import javax.swing.JScrollPane
-
+import javax.swing.table.DefaultTableModel
 
 class App {
 
@@ -14,6 +14,9 @@ class App {
     SourceFile fileModel
 
     private def showFrameWindow() {
+        FileContentsView fileContentsView = new FileContentsView()
+        JScrollPane fileContentsPane = new JScrollPane(fileContentsView)
+
         def swing = new SwingBuilder()
         swing.edt {
             frame(title: "Morlock - ${fileModel.fileName}", defaultCloseOperation: JFrame.EXIT_ON_CLOSE, pack: true, show: true) {
@@ -26,14 +29,16 @@ class App {
                         widget(new DiscreteSplitSlider(5))
                     }
                 }
-                scrollPane(verticalScrollBarPolicy: JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, constraints: BorderLayout.CENTER) {
-                    panel(new FileContentsPanel(model: fileModel))
-                }
+                    widget(fileContentsPane, constraints: BorderLayout.CENTER)
+//                scrollPane(verticalScrollBarPolicy: JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, constraints: BorderLayout.CENTER) {
+//                    panel(new FileContentsPanel(model: fileModel))
+//                }
                 panel(constraints: BorderLayout.SOUTH) {
                     label(text: 'I am the commit details panel')
                 }
             }
         }
+        fileContentsView.setModel(fileModel)
     }
 
     def start() {
