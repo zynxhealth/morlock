@@ -3,6 +3,7 @@ package com.zynx.morlock
 import javax.swing.JTable
 import com.zynx.morlock.models.SourceFile
 import javax.swing.table.DefaultTableModel
+import java.awt.Component
 
 
 class FileContentsView extends JTable implements Observer {
@@ -30,8 +31,21 @@ class FileContentsView extends JTable implements Observer {
         println "Update on object $o with arg $arg"
         fileContents = model.contentsAt('HEAD^')
         tableModel.setRowCount(0)
-        fileContents.eachLine {
-            tableModel.addRow([it] as Object[])
+        tableModel.addRow("<html>${fileContents.replaceAll(/\n/, '<br>')}</html>")
+        updateRowHeights()
+    }
+
+    private void updateRowHeights() {
+        for (row in 0..(this.rowCount - 1)) {
+            int calculatedHeight = this.getRowHeight()
+
+            for (column in 0..(this.columnCount - 1)) {
+                Component comp = this.prepareRenderer(this.getCellRenderer(row, column), row, column)
+                calculatedHeight = Math.max(calculatedHeight, comp.getPreferredSize().height)
+            }
+
+            this.setRowHeight(row, calculatedHeight)
         }
     }
+
 }
