@@ -19,6 +19,13 @@ class DiscreteSplitSlider extends JComponent {
     int leftSliderX, rightSliderX
     def is_locked, isSelectedLeft, isSelectedRight
 
+    def getSliderValue(){
+        if (is_locked)
+            ['value': leftSliderX]
+        else
+            ['leftBound': leftSliderX, 'rightBound': rightSliderX]
+    }
+
     def toggleSplitSliderMode() {
         if (!is_locked) {
             isSelectedLeft = false
