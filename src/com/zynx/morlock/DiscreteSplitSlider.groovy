@@ -86,16 +86,20 @@ class DiscreteSplitSlider extends JComponent {
     void paint(Graphics g) {
         drawSliderBar(g)
         drawTicks(g)
-        drawSlider(g)
+        drawSingleSlider(g)
     }
 
-    private void drawSlider(Graphics g) {
+    private void drawSingleSlider(Graphics g) {
         g.setColor(Color.gray)
 
         int[] x_point_array = [sliderX, sliderX + 10, sliderX - 10]
         int[] y_point_array = [0, 20, 20]
 
         g.fillPolygon(x_point_array, y_point_array, 3)
+    }
+
+    private void drawSplitSlider(Graphics g) {
+        //TODO
     }
 
     private void drawTicks(Graphics g) {
