@@ -20,7 +20,7 @@ class App {
 
         def swing = new SwingBuilder()
         swing.edt {
-            frame(title: "Morlock - ${fileModel.fileName}", defaultCloseOperation: JFrame.EXIT_ON_CLOSE, pack: true, show: true) {
+            frame(title: "Morlock - ${fileModel.filePath}", defaultCloseOperation: JFrame.EXIT_ON_CLOSE, pack: true, show: true) {
                 borderLayout()
                 panel(constraints: BorderLayout.NORTH) {
                     vbox {

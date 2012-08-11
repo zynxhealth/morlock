@@ -2,7 +2,7 @@ package com.zynx.morlock.models
 
 
 class SourceFile extends Observable {
-    private String fileName
+    private String filePath
     private File repoDir
     private String startCommit
     private String endCommit
@@ -11,7 +11,8 @@ class SourceFile extends Observable {
     List<FileHistoryRegion> history = []
 
     def setFileName(String fileName) {
-        this.fileName = fileName
+        println fileName
+        filePath = fileName.replaceAll('\\\\', '/')
         if (! repoDir) {
             repoDir = new File(findRepoDir(fileName))
         }
@@ -52,7 +53,7 @@ class SourceFile extends Observable {
         FileHistoryRegion current
         String previousCommitHash
 
-        Git.executeCommand(repoDir, "git blame -w $startCommit -- $fileName").eachLine {
+        Git.executeCommand(repoDir, "git blame -w $startCommit -- $pathUnderRepo").eachLine {
             def matcher = (it =~ /^([^ ]+) [^\)]+ (\d+)\) (.+)$/)
             String hash = matcher[0][1]
             int lineNumber = matcher[0][2] as int
@@ -81,7 +82,7 @@ class SourceFile extends Observable {
         for (i in startIndex..(endIndex - 1)) {
             String startCommitHash = commits[i].abbreviatedHash
             String endCommitHash = commits[i + 1].abbreviatedHash
-            String response = Git.executeCommand(repoDir, "git diff -w $startCommitHash $endCommitHash -- $fileName")
+            String response = Git.executeCommand(repoDir, "git diff -w $startCommitHash $endCommitHash -- $pathUnderRepo")
             response = response.replaceAll(/\n\\ No newline at end of file/, '')
             response = response.replaceAll(/\n/, '##newline##')
             response += '@@'
@@ -119,8 +120,10 @@ class SourceFile extends Observable {
     }
 
     def refreshCommitList() {
-        Git.executeCommand(repoDir, "git log --reverse --pretty=format:%h#%an#%cn#%cd -- $fileName").eachLine {
+        println Git.executeCommand(repoDir, "git log --reverse --pretty=format:%h#%an#%cn#%cd -- $pathUnderRepo")
+        Git.executeCommand(repoDir, "git log --reverse --pretty=format:%h#%an#%cn#%cd -- $pathUnderRepo").eachLine {
             def tokens = it.tokenize('#')
+            println tokens[0]
             commits << new Commit(abbreviatedHash: tokens[0], author: tokens[1], committer: tokens[2])
         }
         commits.each {
@@ -129,11 +132,11 @@ class SourceFile extends Observable {
     }
 
     String contentsAt(String commitHash) {
-        Git.executeCommand(repoDir, "git show $commitHash:${this.pathUnderRepo}")
+        Git.executeCommand(repoDir, "git show $commitHash:$pathUnderRepo")
     }
 
     String getPathUnderRepo() {
-        return fileName.replaceFirst(repoDir.absolutePath + '/', '')
+        return filePath.replaceFirst(repoDir.absolutePath.replaceAll('\\\\', '/') + '/', '')
     }
 
     def getCommitHashList(){
