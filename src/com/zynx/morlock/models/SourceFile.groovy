@@ -39,7 +39,7 @@ class SourceFile extends Observable {
             }
         }
         historyAffected.each {
-            it.applyDiffHunk(oldStart: oldStart, oldCount: oldCount, newStart: newStart, newCount: newCount, hunk: hunk, history: history)
+            it.applyDiffHunk(oldStart, oldCount, newStart, newCount, hunk, history)
         }
     }
 
@@ -88,11 +88,11 @@ class SourceFile extends Observable {
             def matcher = (response =~ /@@ -(\d+),(\d+) \+(\d+),(\d+) @@##newline##(.+)@@/)
             matcher.each {
                 applyDiffHunkToHistory(
-                        oldStart: it[1] as int,
-                        oldCount: it[2] as int,
-                        newStart: it[3] as int,
-                        newCount: it[4] as int,
-                        hunk: it[5].replaceAll(/##newline##/, '\n')
+                        it[1] as int,
+                        it[2] as int,
+                        it[3] as int,
+                        it[4] as int,
+                        it[5].replaceAll(/##newline##/, '\n')
                 )
             }
         }

@@ -55,7 +55,7 @@ class App {
         if (args.size() > 0) {
             SourceFile model = new SourceFile()
             model.setFileName(args[0])
-            model.setCommitRange('b40781572fcf43e31336a342de0ff651360ec9f4', '4b3ce5fea1efab14cb666c52d84eb0ebcbd6cd91')
+            model.setCommitRange('d357586c1df060c80753fb0c07667549db6a6b85', '3e96cbc428a718cb010244692210cdd3c665fc77')
             theApp = new App(fileModel: model)
             theApp.start()
         }
