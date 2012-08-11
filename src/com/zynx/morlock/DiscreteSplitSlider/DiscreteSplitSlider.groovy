@@ -22,7 +22,7 @@ class DiscreteSplitSlider extends JComponent {
     def DiscreteSplitSlider(values) {
         ui = new DiscreteSplitSliderUI(this)
 
-        is_locked = false
+        is_locked = true
         isSelectedLeft = false
         isSelectedRight = false
 
@@ -99,9 +99,16 @@ class DiscreteSplitSlider extends JComponent {
             isSelectedRight = false
 
             leftSliderX = rightSliderX
+            is_locked = true
+
+            sliderJoined()
+        } else {
+            is_locked = false
+
+            sliderSplit()
         }
 
-        is_locked = !is_locked
+        repaint()
     }
 
     def findNearestTick(int x_val) {
@@ -118,32 +125,44 @@ class DiscreteSplitSlider extends JComponent {
     private void moveLeftSlider(Point location) {
         if (location.x > ui.SLIDER_BAR_START && location.x < ui.SLIDER_BAR_END) {
             def newLoc = findNearestTick((int) location.x)
-            if (newLoc <= rightSliderX)
-                leftSliderX = newLoc
+            if (newLoc > rightSliderX || newLoc == leftSliderX)
+                return
+
+            leftSliderX = newLoc
 
             repaint()
+            sliderValueChanged()
         }
     }
 
     private void moveRightSlider(Point location) {
         if (location.x > ui.SLIDER_BAR_START && location.x < ui.SLIDER_BAR_END) {
             def newLoc = findNearestTick((int) location.x)
-            if (newLoc >= leftSliderX)
-                rightSliderX = newLoc
+            if (newLoc < leftSliderX || newLoc == rightSliderX)
+                return
+
+            rightSliderX = newLoc
 
             repaint()
+            sliderValueChanged()
         }
     }
 
     private void moveJointSlider(Point location) {
         if (location.x > ui.SLIDER_BAR_START && location.x < ui.SLIDER_BAR_END) {
-            rightSliderX = leftSliderX = findNearestTick((int) location.x)
+            def new_val = findNearestTick((int) location.x)
+
+            if (new_val == rightSliderX && new_val == leftSliderX)
+                return
+
+            rightSliderX = leftSliderX = new_val
+
             repaint()
+            sliderValueChanged()
         }
     }
 
-    int getValueIndexAt(int slider_x)
-    {
+    int getValueIndexAt(int slider_x) {
         int interval = (ui.SLIDER_BAR_END - ui.SLIDER_BAR_START) / (num_values - 1)
         (slider_x - ui.SLIDER_BAR_START) / interval
     }
@@ -164,22 +183,19 @@ class DiscreteSplitSlider extends JComponent {
     }
 
     void sliderValueChanged() {
-        for (listener in listeners)
-        {
+        for (listener in listeners) {
             listener.sliderValueChanged(new SliderEvent(this, !is_locked, getSelectedValues()))
         }
     }
 
     void sliderJoined() {
-        for (listener in listeners)
-        {
+        for (listener in listeners) {
             listener.sliderJoined(new SliderEvent(this, !is_locked, getSelectedValues()))
         }
     }
 
     void sliderSplit() {
-        for (listener in listeners)
-        {
+        for (listener in listeners) {
             listener.sliderSplit(new SliderEvent(this, !is_locked, getSelectedValues()))
         }
     }

@@ -32,7 +32,10 @@ class App {
                         }
                         vstrut(height: 50)
                         hstrut(width: 1000)
-                        widget(new DiscreteSplitSlider(fileModel.commitHashList))
+
+                        def slider = new DiscreteSplitSlider(fileModel.commitHashList)
+                        checkBox(text: 'Enable Multi-Revision Viewing', actionPerformed: {slider.toggleSplitSliderMode()} )
+                        widget(slider)
                     }
                 }
                 widget(fileContentsPane, constraints: BorderLayout.CENTER)
