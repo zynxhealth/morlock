@@ -47,7 +47,6 @@ class FileContentsView extends JTable implements Observer {
 
     @Override
     void update(Observable o, Object arg) {
-        println "Update on object $o with arg $arg"
         tableModel.setRowCount(0)
         model.history.each { FileHistoryRegion region ->
             def contents = "<html>${region.contents.replaceAll(/\n/, '<br>')}</html>"
