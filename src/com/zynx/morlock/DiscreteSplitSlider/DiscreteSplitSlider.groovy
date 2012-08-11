@@ -10,7 +10,7 @@ import java.awt.Point
 
 class DiscreteSplitSlider extends JComponent {
     def num_values
-    List<String> value_list
+    List value_list
 
     int leftSliderX, rightSliderX
     def is_locked = false, isSelectedLeft, isSelectedRight
@@ -93,13 +93,6 @@ class DiscreteSplitSlider extends JComponent {
         void mouseMoved(MouseEvent e) {}
     }
 
-    def getSliderValue() {
-        if (is_locked)
-            ['value': leftSliderX]
-        else
-            ['leftBound': leftSliderX, 'rightBound': rightSliderX]
-    }
-
     def toggleSplitSliderMode() {
         if (!is_locked) {
             isSelectedLeft = false
@@ -149,17 +142,17 @@ class DiscreteSplitSlider extends JComponent {
         }
     }
 
-    private def getValueIndexAt(int slider_x)
+    int getValueIndexAt(int slider_x)
     {
-        int interval = ui.SLIDER_BAR_END - ui.SLIDER_BAR_START / num_values
+        int interval = (ui.SLIDER_BAR_END - ui.SLIDER_BAR_START) / (num_values - 1)
         (slider_x - ui.SLIDER_BAR_START) / interval
     }
 
-    def List<String> getSelectedValues() {
+    def List getSelectedValues() {
         def beginIndex = getValueIndexAt(leftSliderX)
         def endIndex = getValueIndexAt(rightSliderX)
 
-        List<String> selected_values = []
+        List selected_values = []
         for (i in beginIndex..endIndex) {
             selected_values.add(value_list[i])
         }

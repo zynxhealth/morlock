@@ -28,7 +28,7 @@ class DiscreteSplitSliderUI {
     }
 
     public void drawComponent(Graphics g) {
-        Graphics2D g2d = (Graphics2D)g
+        Graphics2D g2d = (Graphics2D) g
 
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON)
@@ -52,7 +52,7 @@ class DiscreteSplitSliderUI {
     private void drawSlider(Graphics2D g) {
         g.setColor(Color.black)
 
-        final slider_y = SLIDER_BAR_Y - (int)(SLIDER_BAR_HEIGHT / 2) - 5
+        final slider_y = SLIDER_BAR_Y - (int) (SLIDER_BAR_HEIGHT / 2) - 5
 
         int[] left_x_point_array = [slider.leftSliderX - 1, slider.leftSliderX - SLIDER_WIDTH, slider.leftSliderX - 1]
 
@@ -73,26 +73,65 @@ class DiscreteSplitSliderUI {
 
         final label_x_offset = 20
 
+        List<String> label_list = getLabelList(label_x_offset)
+
         def tick_width = 2
         def tick_height = SLIDER_BAR_HEIGHT
         def arc_amount = 3
 
         int tick_increments = (SLIDER_BAR_END - SLIDER_BAR_START) / (slider.num_values - 1)
-        final tick_y = SLIDER_BAR_Y - (int)(SLIDER_BAR_HEIGHT / 2)
+        final tick_y = SLIDER_BAR_Y - (int) (SLIDER_BAR_HEIGHT / 2)
         final label_y = SLIDER_BAR_Y + 30
 
-        if (slider.num_values > 0) {
-            g.drawString(slider.value_list[0], SLIDER_BAR_START - label_x_offset, label_y)
-            g.drawString(slider.value_list.last(), SLIDER_BAR_END - label_x_offset,label_y)
+        if (label_list.size() > 0) {\
+            selectContextualTextColoring(0, g)
+            g.drawString(label_list[0], SLIDER_BAR_START - label_x_offset, label_y)
+
+            selectContextualTextColoring(label_list.size() - 1, g)
+            g.drawString(label_list.last(), SLIDER_BAR_END - label_x_offset, label_y)
 
             for (i in 1..(slider.num_values - 2)) {
                 final tick_x = SLIDER_BAR_START + i * tick_increments - (int) (tick_width / 2)
 
+                g.setColor(Color.darkGray)
                 g.fillRoundRect(tick_x, tick_y, tick_width, tick_height, arc_amount, arc_amount)
 
-                g.drawString(slider.value_list[i], tick_x - label_x_offset, label_y)
+                selectContextualTextColoring(i, g)
+                g.drawString(label_list[i], tick_x - label_x_offset, label_y)
             }
         }
+    }
+
+    def void selectContextualTextColoring(int index, Graphics2D g) {
+        if (slider.getValueIndexAt(slider.leftSliderX) == index || slider.getValueIndexAt(slider.rightSliderX) == index)
+            g.setColor(Color.black)
+        else
+            g.setColor(Color.lightGray)
+    }
+
+    def getLabelList(int label_x_offset) {
+        def shorten_labels = false
+        def no_labels = false
+
+        if (label_x_offset * 2.8 * slider.num_values > SLIDER_BAR_END - SLIDER_BAR_START) {
+            shorten_labels = true
+        }
+
+        if (label_x_offset * slider.num_values > SLIDER_BAR_END - SLIDER_BAR_START) {
+            no_labels = true
+        }
+
+        def label_list = []
+        for (label in slider.value_list) {
+            if (no_labels) {
+                label_list.add("")
+            } else if (shorten_labels) {
+                label_list.add(label.toString().subSequence(0, 2) + "..")
+            } else {
+                label_list.add(label.toString())
+            }
+        }
+        label_list
     }
 
     private void drawSliderBar(Graphics2D g) {

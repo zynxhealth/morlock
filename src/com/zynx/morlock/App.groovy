@@ -32,7 +32,7 @@ class App {
                         }
                         vstrut(height: 50)
                         hstrut(width: 1000)
-                        widget(new DiscreteSplitSlider(['12345', '23456', '34567', '45678', '56789']))
+                        widget(new DiscreteSplitSlider(fileModel.commitHashList))
                     }
                 }
                 widget(fileContentsPane, constraints: BorderLayout.CENTER)

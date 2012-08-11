@@ -55,6 +55,15 @@ class SourceFile extends Observable {
         return fileName.replaceFirst(repoDir.absolutePath + '/', '')
     }
 
+    def getCommitHashList(){
+        List<String> hashList = []
+        for (Commit commit in commits)
+        {
+            hashList.add(commit.abbreviatedHash)
+        }
+        hashList
+    }
+
     private static String findRepoDir(String fileName) {
         while (! (new File(fileName + '/.git')).exists()) {
             fileName = fileName.replaceFirst(/\/[^\/]+$/, '')
