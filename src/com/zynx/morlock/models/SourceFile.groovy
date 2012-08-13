@@ -9,10 +9,12 @@ class SourceFile extends Observable {
 
     List<Commit> commits = []
     List<FileHistoryLine> history = []
+    def commitsList =[]
 
     def setFileName(String fileName) {
         filePath = fileName.replaceAll('\\\\', '/')
         repoDir = new File(findRepoDir(fileName))
+        showFullCommitList()
         refreshCommitList()
         refreshHistory()
     }
@@ -191,5 +193,13 @@ class SourceFile extends Observable {
             }
         }
         fileName
+    }
+
+
+    def showFullCommitList() {
+        Git.executeCommand(repoDir, "git log --pretty --oneline -- $filePath").eachLine {
+
+            commitsList <<  it
+        }
     }
 }

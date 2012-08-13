@@ -7,6 +7,7 @@ import javax.swing.JFrame
 import javax.swing.JScrollPane
 import com.zynx.morlock.DiscreteSplitSlider.DiscreteSplitSlider
 import com.zynx.morlock.views.FileContents.FileContentsView
+import com.zynx.morlock.views.FileContents.CommitPanel
 import javax.swing.JFileChooser
 
 
@@ -19,6 +20,7 @@ class App {
     private def showFrameWindow() {
         FileContentsView fileContentsView = new FileContentsView()
         JScrollPane fileContentsPane = new JScrollPane(fileContentsView)
+        JScrollPane commitsPane = (new JScrollPane(new CommitPanel(fileModel)))
         def slider = new DiscreteSplitSlider(fileModel.commitHashList)
 
         def swing = new SwingBuilder()
@@ -49,9 +51,7 @@ class App {
                     }
                 }
                 widget(fileContentsPane, constraints: BorderLayout.CENTER)
-                panel(constraints: BorderLayout.SOUTH) {
-                    label(text: 'I am the commit details panel')
-                }
+                widget(commitsPane, constraints: BorderLayout.SOUTH)
             }
         }
         def sliderValues = slider.getSelectedValues()
