@@ -54,7 +54,7 @@ class SourceFile extends Observable {
         List result = []
         (cmdOut =~ /@@ -(\d+),(\d+) \+(\d+),(\d+) @@(##newline##)?(.+)(##newline##)?@@/).each {
                 result << new DiffHunk(
-                    beforeLine: it[1] as int,
+                    beforeLine: (it[1] as int) - (it[5] ? 0 : 1),
                     beforeCount: it[2] as int,
                     afterLine: it[3] as int,
                     afterCount: it[4] as int,
