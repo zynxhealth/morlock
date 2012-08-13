@@ -89,6 +89,12 @@ class SourceFile extends Observable {
                         case '-':
                             for (i in startLine..<(startLine + hunkletSize)) {
                                 def lineIndex = historyIndexForLine(i, lastHistoryIndex)
+                                if(lineIndex >= history.size())
+                                {
+                                    println "Excluding line #${lineIndex}"
+                                    break;
+                                }
+
                                 history[lineIndex].deleted = nextCommit
                                 lastHistoryIndex = lineIndex + 1
                             }
