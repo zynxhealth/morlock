@@ -6,6 +6,8 @@ import java.awt.BorderLayout
 import javax.swing.JFrame
 import javax.swing.JScrollPane
 import com.zynx.morlock.DiscreteSplitSlider.DiscreteSplitSlider
+import com.zynx.morlock.views.FileContents.FileContentsView
+import javax.swing.JFileChooser
 
 
 class App {
@@ -17,6 +19,7 @@ class App {
     private def showFrameWindow() {
         FileContentsView fileContentsView = new FileContentsView()
         JScrollPane fileContentsPane = new JScrollPane(fileContentsView)
+        def slider = new DiscreteSplitSlider(fileModel.commitHashList)
 
         def swing = new SwingBuilder()
         swing.edt {
@@ -25,6 +28,16 @@ class App {
                 panel(constraints: BorderLayout.NORTH) {
                     vbox {
                         toolBar(floatable: false) {
+                            button(text: 'Choose File', actionPerformed: {
+                                def chooser = new JFileChooser()
+                                if (chooser.showOpenDialog(fileContentsPane) == JFileChooser.APPROVE_OPTION) {
+                                    File file = chooser.getSelectedFile()
+                                    fileModel.fileName = file.absolutePath
+                                }
+                            })
+                            separator()
+                            checkBox(text: 'Enable Multi-Revision Viewing', actionPerformed: {slider.toggleSplitSliderMode()} )
+                            separator()
                             FileContentsView.columnNames().each {
                                 String name = it
                                 swing.checkBox(it, id: "${name}Button", selected: true, actionPerformed: {fileContentsView.showColumn(name, it.source.selected)})
@@ -32,9 +45,6 @@ class App {
                         }
                         vstrut(height: 50)
                         hstrut(width: 1000)
-
-                        def slider = new DiscreteSplitSlider(fileModel.commitHashList)
-                        checkBox(text: 'Enable Multi-Revision Viewing', actionPerformed: {slider.toggleSplitSliderMode()} )
                         widget(slider)
                     }
                 }
@@ -44,7 +54,10 @@ class App {
                 }
             }
         }
+        def sliderValues = slider.getSelectedValues()
+        fileModel.setCommitRange(sliderValues.first(), sliderValues.last())
         fileContentsView.setModel(fileModel)
+        slider.addListener(fileContentsView)
     }
 
     def start() {
@@ -55,7 +68,7 @@ class App {
         if (args.size() > 0) {
             SourceFile model = new SourceFile()
             model.setFileName(args[0])
-            model.setCommitRange('d357586c1df060c80753fb0c07667549db6a6b85', '3e96cbc428a718cb010244692210cdd3c665fc77')
+//            model.setCommitRange('d357586c1df060c80753fb0c07667549db6a6b85', '3e96cbc428a718cb010244692210cdd3c665fc77')
             theApp = new App(fileModel: model)
             theApp.start()
         }

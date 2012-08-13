@@ -4,27 +4,23 @@ package com.zynx.morlock.models
 class SourceFile extends Observable {
     private String filePath
     private File repoDir
-    private String startCommit
-    private String endCommit
+    private String startCommitHash
+    private String endCommitHash
 
     List<Commit> commits = []
-    List<FileHistoryRegion> history = []
+    List<FileHistoryLine> history = []
 
     def setFileName(String fileName) {
-        println fileName
         filePath = fileName.replaceAll('\\\\', '/')
-        if (! repoDir) {
-            repoDir = new File(findRepoDir(fileName))
-        }
+        repoDir = new File(findRepoDir(fileName))
         refreshCommitList()
         refreshHistory()
-        notifyObservers()
     }
 
     def setCommitRange(String start, String end) {
         if (commits.any {start.startsWith(it.abbreviatedHash)} && commits.any {end.startsWith(it.abbreviatedHash)}) {
-            startCommit = start
-            endCommit = end
+            startCommitHash = start
+            endCommitHash = end
             refreshHistory()
         }
         else {
@@ -32,107 +28,141 @@ class SourceFile extends Observable {
         }
     }
 
-    private applyDiffHunkToHistory(int oldStart, int oldCount, int newStart, int newCount, String hunk) {
-        List<FileHistoryRegion> historyAffected = []
-        for (FileHistoryRegion region in history) {
-            if (region.intersectsLineRange(oldStart, oldStart + oldCount)) {
-                historyAffected << region
+    private startHistoryWithBlame() {
+        String lastHash
+        Commit commit
+
+        Git.executeCommand(repoDir, "git blame -w $startCommitHash -- $pathUnderRepo").eachLine {
+            def matcher = (it =~ /^([^ ]+) [^\)]+ (\d+)\) (.*)$/)
+            String hash = matcher[0][1]
+            int lineNumber = matcher[0][2] as int
+            String line = matcher[0][3]
+            if (! commit || lastHash != hash) {
+                commit = commits.find {hash.startsWith(it.abbreviatedHash)} as Commit
             }
+            history << new FileHistoryLine(lineNumber: lineNumber, contents: line, introduced: commit, wasNew: false)
+            lastHash = hash
         }
-        historyAffected.each {
-            it.applyDiffHunk(oldStart, oldCount, newStart, newCount, hunk, history)
+    }
+
+    private List<DiffHunk> diffCommits(String firstHash, String secondHash) {
+        String cmdOut = Git.executeCommand(repoDir, "git diff -w $firstHash $secondHash -- $pathUnderRepo")
+        cmdOut = cmdOut.replaceAll(/\n\\ No newline at end of file/, '')
+        cmdOut = cmdOut.replaceAll(/\n/, '##newline##')
+        cmdOut += '@@'
+
+        List result = []
+        (cmdOut =~ /@@ -(\d+),(\d+) \+(\d+),(\d+) @@(##newline##)?(.+)(##newline##)?@@/).each {
+                result << new DiffHunk(
+                    beforeLine: it[1] as int,
+                    beforeCount: it[2] as int,
+                    afterLine: it[3] as int,
+                    afterCount: it[4] as int,
+                    contents: it[6].replaceAll(/##newline##/, '\n')
+            )
+        }
+
+        result
+    }
+
+    int historyIndexForLine(int lineNumber, int startFromIndex) {
+        int found = history.findIndexOf(Math.max(lineNumber - 1, startFromIndex)) {
+            it.lineNumber == lineNumber && ! it.deleted
+        }
+        found < 0 ? history.size() : found
+    }
+
+    def applyDiffsToHistory() {
+        def startIndex = commits.findIndexOf {startCommitHash.startsWith(it.abbreviatedHash)}
+        def endIndex = commits.findIndexOf {endCommitHash.startsWith(it.abbreviatedHash)}
+
+        for (nextCommitIndex in (startIndex + 1)..endIndex) {
+            String previousCommitHash = commits[nextCommitIndex - 1].abbreviatedHash
+            String nextCommitHash = commits[nextCommitIndex].abbreviatedHash
+            Commit nextCommit = commits[nextCommitIndex]
+
+            diffCommits(previousCommitHash, nextCommitHash).each { DiffHunk diffHunk ->
+                diffHunk.eachHunklet { String mode, int startLine, List<String> hunklet ->
+                    int hunkletSize = hunklet.size()
+                    int lastHistoryIndex = 0
+                    switch (mode) {
+                        case '-':
+                            for (i in startLine..<(startLine + hunkletSize)) {
+                                def lineIndex = historyIndexForLine(i, lastHistoryIndex)
+                                history[lineIndex].deleted = nextCommit
+                                lastHistoryIndex = lineIndex + 1
+                            }
+
+                            if (lastHistoryIndex < history.size()) {
+                                history[ lastHistoryIndex..<history.size() ].each {
+                                    it.lineNumber -= hunkletSize
+                                }
+                            }
+                            break
+
+                        case '+':
+                            int nextLineIndex = historyIndexForLine(startLine, 0)
+                            if (nextLineIndex < history.size() - 1) {
+                                history[ (nextLineIndex + 1)..<history.size() ].each {
+                                    it.lineNumber += hunkletSize
+                                }
+                                lastHistoryIndex = nextLineIndex
+                            }
+
+                            int linesCollected = 0
+                            def newHistoryLines = hunklet.collect { new FileHistoryLine(
+                                    lineNumber: startLine + linesCollected++,
+                                    contents: it,
+                                    introduced: nextCommit,
+                                    wasNew: true
+                            ) }
+                            history.addAll(historyIndexForLine(startLine, lastHistoryIndex), newHistoryLines)
+                            break
+                    }
+                }
+            }
         }
     }
 
     private refreshHistory() {
-        if (! (startCommit && endCommit)) {
+        if (! (startCommitHash && endCommitHash)) {
             return
         }
 
-        //  Use annotate to set up the initial region list.
-        FileHistoryRegion current
-        String previousCommitHash
-
-        Git.executeCommand(repoDir, "git blame -w $startCommit -- $pathUnderRepo").eachLine {
-            def matcher = (it =~ /^([^ ]+) [^\)]+ (\d+)\) (.+)$/)
-            String hash = matcher[0][1]
-            int lineNumber = matcher[0][2] as int
-            String line = matcher[0][3]
-            Commit thisCommit = commits.find {hash.startsWith(it.abbreviatedHash)} as Commit
-            if (! current) {
-                current = new FileHistoryRegion(lineNumber: lineNumber, contents: line, introHash: hash, committer: thisCommit.committer, author: thisCommit.author)
-            }
-            else if (previousCommitHash?.startsWith(thisCommit.abbreviatedHash)) {
-                current.contents += "\n$line"
-            }
-            else {
-                history << current
-                current = new FileHistoryRegion(lineNumber: lineNumber, contents: line, introHash: hash, committer: thisCommit.committer, author: thisCommit.author)
-            }
-            previousCommitHash = hash
-        }
-        if (current) {
-            history << current
+        history.clear()
+        startHistoryWithBlame()
+        int significant = Math.max(startCommitHash.length(), endCommitHash.length()) - 1
+        if (startCommitHash.substring(0, significant) != endCommitHash.substring(0, significant)) {
+            applyDiffsToHistory()
         }
 
-        //  Iterate through diffs, accumulating changes into the history list.
-        def startIndex = commits.findIndexOf {startCommit.startsWith(it.abbreviatedHash)}
-        def endIndex = commits.findIndexOf {endCommit.startsWith(it.abbreviatedHash)}
-
-        for (i in startIndex..(endIndex - 1)) {
-            String startCommitHash = commits[i].abbreviatedHash
-            String endCommitHash = commits[i + 1].abbreviatedHash
-            String response = Git.executeCommand(repoDir, "git diff -w $startCommitHash $endCommitHash -- $pathUnderRepo")
-            response = response.replaceAll(/\n\\ No newline at end of file/, '')
-            response = response.replaceAll(/\n/, '##newline##')
-            response += '@@'
-            def matcher = (response =~ /@@ -(\d+),(\d+) \+(\d+),(\d+) @@##newline##(.+)@@/)
-            matcher.each {
-                applyDiffHunkToHistory(
-                        it[1] as int,
-                        it[2] as int,
-                        it[3] as int,
-                        it[4] as int,
-                        it[5].replaceAll(/##newline##/, '\n')
-                )
-            }
-        }
-
-        //  FAKE!
-//        String contents = contentsAt('HEAD^')
-//        Random rand = new Random((new Date()).seconds)
-//        FileHistoryRegion current
-//        contents.eachLine {
-//            if (! current) {
-//                current = new FileHistoryRegion(contents: it, introHash: 'intro', deleteHash: rand.nextInt() % 4 == 0 ? 'delete' : null, committer: 'committer', author: 'author')
-//            }
-//            else {
-//                current.contents += "\n$it"
-//                if (rand.nextInt() % 6 == 0) {
-//                    history << current
-//                    current = null
-//                }
-//            }
-//        }
-//        if (current) {
-//            history << current
-//        }
+        setChanged()
+        notifyObservers()
+        clearChanged()
     }
 
     def refreshCommitList() {
-        println Git.executeCommand(repoDir, "git log --reverse --pretty=format:%h#%an#%cn#%cd -- $pathUnderRepo")
         Git.executeCommand(repoDir, "git log --reverse --pretty=format:%h#%an#%cn#%cd -- $pathUnderRepo").eachLine {
             def tokens = it.tokenize('#')
-            println tokens[0]
             commits << new Commit(abbreviatedHash: tokens[0], author: tokens[1], committer: tokens[2])
-        }
-        commits.each {
-            println it.dump()
         }
     }
 
-    String contentsAt(String commitHash) {
-        Git.executeCommand(repoDir, "git show $commitHash:$pathUnderRepo")
+    def eachHistoryRegion(Closure c) {
+        int historyIndex = 0
+
+        while (historyIndex < history.size()) {
+            FileHistoryLine firstRegionLine = history[historyIndex]
+            int nextIndex = history.findIndexOf(historyIndex + 1) {! it.isSameRegion(firstRegionLine)}
+            if (nextIndex < 0) nextIndex = history.size()
+            c(
+                    history[historyIndex..<nextIndex].collect {it.contents},
+                    firstRegionLine.introduced,
+                    firstRegionLine.deleted,
+                    firstRegionLine.wasNew
+            )
+            historyIndex = nextIndex
+        }
     }
 
     String getPathUnderRepo() {
@@ -141,8 +171,7 @@ class SourceFile extends Observable {
 
     def getCommitHashList(){
         List<String> hashList = []
-        for (Commit commit in commits)
-        {
+        for (Commit commit in commits) {
             hashList.add(commit.abbreviatedHash)
         }
         hashList
